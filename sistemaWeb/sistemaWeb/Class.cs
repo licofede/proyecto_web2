@@ -8,5 +8,9 @@ namespace sistemaWeb
     public class Class
     {
         //hola
+        public void hola()
+        {
+
+        }
     }
 }
