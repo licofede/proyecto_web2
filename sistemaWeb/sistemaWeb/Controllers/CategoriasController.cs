@@ -19,9 +19,46 @@ namespace sistemaWeb.Controllers
         }
 
         // GET: Categorias
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(String sortOrder,
+            String CurrentFilter,String searchingString,int?page)
         {
-            return View(await _context.Categoria.ToListAsync());
+            ViewData["NombreSortParm"]=String.IsNullOrEmpty(sortOrder)?"nombre_desc":"";
+            ViewData["DescripcionSortParm"] = sortOrder == "descripcion_asc" ? "descripcion_desc" : "descripcion_asc";
+            if (searchingString != null)
+            {
+                page = 1;
+            }
+            else
+            {
+                searchingString = CurrentFilter;
+            }
+            ViewData["CurrentFilter"] = searchingString;
+            ViewData["CurrentSort"]=sortOrder;
+
+            var categorias = from s in _context.Categoria select s;
+            if (!String.IsNullOrEmpty(searchingString))
+            {
+                categorias = categorias.Where(s=>s.Nombre.Contains(searchingString) || s.Descripcion.Contains(searchingString));
+            }
+            switch (sortOrder)
+            {
+                case "nombre_desc":
+                    categorias = categorias.OrderByDescending(s=>s.Nombre);
+                    break;
+                case "descripcion_desc":
+                    categorias = categorias.OrderByDescending(s => s.Descripcion);
+                    break;
+                case "descripcion_asc":
+                    categorias = categorias.OrderBy(s => s.Descripcion);
+                    break;
+                default:
+                    categorias = categorias.OrderBy(s => s.Nombre);
+                        break;
+            }
+            //return View(await categorias.AsNoTracking().ToListAsync());      
+            //return View(await _context.Categoria.ToListAsync());
+            int pageSize = 3;
+            return View(await Paginacion<Categoria>.CreateAsync(categorias.AsNoTracking(), page ?? 1, pageSize));
         }
 
         // GET: Categorias/Details/5
